@@ -1,0 +1,4 @@
+# Install PyTorch first, following https://pytorch.org for your GPU (CUDA or ROCm); then:
+numpy
+pillow
+texture2ddecoder
