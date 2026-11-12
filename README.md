@@ -174,4 +174,11 @@ patches, a second refiner pass, and blending in a second, worse copy of the same
   time, not redistributed here.
 - Block decoding: [texture2ddecoder](https://github.com/K0lb3/texture2ddecoder).
 
+## Licence
+
+- **Code:** MIT, see [LICENSE](LICENSE).
+- **Model files** (the `.pt` files on the Releases page): not covered by the MIT licence. They are provided as-is for
+  personal, non-commercial use.
+- **ETCPACK** is Ericsson's and stays under Ericsson's licence; `build_etcpack.sh` downloads it to your machine.
+
 This is a fan project and is not affiliated with the game's developer or publisher. No game assets are included.
