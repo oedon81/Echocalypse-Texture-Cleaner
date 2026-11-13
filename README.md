@@ -25,16 +25,16 @@ settings.
 
 **Scarlett**
 
-![Scarlett rendered with raw and with cleaned textures](docs/compare_scarlett.png)
+![Scarlett rendered with raw and with cleaned textures](docs/render_scarlett.png)
 
 **Nile**: the cleaned side uses the censor-pack files as input (see "Use the censor pack when there is one" below);
 the raw side is the normally shipped file.
 
-![Nile rendered with raw textures and with textures cleaned from the censor pack](docs/compare_nile.png)
+![Nile rendered with raw textures and with textures cleaned from the censor pack](docs/render_nile.png)
 
 **Neville (skin)**
 
-![Neville skin rendered with raw and with cleaned textures](docs/compare_neville_skin.png)
+![Neville skin rendered with raw and with cleaned textures](docs/render_neville_skin.png)
 
 ## What is in here
 
