@@ -17,6 +17,23 @@ Seam error is the render error when a piece is drawn over its own skin colour, c
 levels; a clean original scores 0. Seams get much fainter. They do not all disappear: very small pieces (a mouth patch a
 few blocks wide) lose their edge colour at compression time and no model can know what it was.
 
+## Before and after
+
+The face skin piece of three characters, cut from the texture atlas and shown at twice its size without smoothing. Left
+is the game's file as shipped, right is the same file after `clean.py` with the default settings.
+
+**Scarlett**
+
+![Scarlett face skin, raw and cleaned](docs/compare_scarlett.png)
+
+**Nile**
+
+![Nile face skin, raw and cleaned](docs/compare_nile.png)
+
+**Neville (skin)**
+
+![Neville skin face skin, raw and cleaned](docs/compare_neville_skin.png)
+
 ## What is in here
 
 - `clean.py`: clean raw game textures into ordinary PNGs.
@@ -25,7 +42,7 @@ few blocks wide) lose their edge colour at compression time and no model can kno
 - `tools/fetch_textures.py`: download raw hero textures (and the better "censor pack" versions) from the game's update CDN.
 - `echoclean/`: the library the scripts use.
 
-Not in here: any game art, and the encoder itself (Ericsson ETCPACK; its licence does not allow redistribution, so a
+Not in here: any game art beyond the three small comparison crops above, and the encoder itself (Ericsson ETCPACK; its licence does not allow redistribution, so a
 script downloads and builds it on your machine).
 
 ## Setup
@@ -205,4 +222,5 @@ are from one texture, so differences of a few hundredths of a dB are within what
   personal, non-commercial use.
 - **ETCPACK** is Ericsson's and stays under Ericsson's licence; `build_etcpack.sh` downloads it to your machine.
 
-This is a fan project and is not affiliated with the game's developer or publisher. No game assets are included.
+This is a fan project and is not affiliated with the game's developer or publisher. No game assets are included apart from the three
+small comparison crops in this README, which belong to the game's publisher.
