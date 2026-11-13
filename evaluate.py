@@ -4,7 +4,7 @@
   python evaluate.py --raw path/to/raw_game_texture.png --clean path/to/clean_original.png
 
 Only meaningful when the clean file is exactly what the game encoded. Check that first: the line 'identical blocks'
-says how many of the game's blocks come out byte for byte when the clean file is re-encoded (about 99% for a true pair).
+says how many of the game's blocks come out byte for byte when the clean file is re-encoded (100% for a true pair).
 """
 import argparse, numpy as np
 

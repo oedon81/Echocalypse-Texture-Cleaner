@@ -1,7 +1,8 @@
 """The game's ETC2 encoder, in process: Ericsson ETCPACK v2.74, 'fast' speed, 'perceptual' metric.
 
-Encoding a clean original with it reproduces about 99% of the game's blocks byte for byte, so training data made with it
-carries the real damage. Build the library first with  ./build_etcpack.sh  (see README).
+Encoding a clean original with it reproduces the game's blocks byte for byte (100% on the pair this was measured on), so
+training data made with it carries the real damage. That needs the same rand() the game's build machine had (macOS); the
+library brings its own, see native/etcpack_lib.cxx. Build it first with  ./build_etcpack.sh  (see README).
 """
 import os, ctypes
 import numpy as np
@@ -20,7 +21,8 @@ def _lib():
 
 
 def encode_blocks(pm, fast=True, perceptual=True):
-    """premultiplied RGBA uint8 (H and W multiples of 4) -> blocks (H/4, W/4, 16). Single-threaded; not thread-safe (use processes)."""
+    """premultiplied RGBA uint8 (H and W multiples of 4) -> blocks (H/4, W/4, 16). Single-threaded. May be called from several threads at once
+    (ctypes releases the GIL), provided one call has finished before the others start: the first call sets up the tables."""
     h, w = pm.shape[:2]
     if h % 4 or w % 4: raise ValueError('size must be a multiple of 4')
     out = ctypes.create_string_buffer(h * w)

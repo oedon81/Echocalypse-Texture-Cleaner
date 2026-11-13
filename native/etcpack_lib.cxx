@@ -3,6 +3,28 @@
 #include <sys/timeb.h>
 #define _timeb timeb
 #define _ftime ftime
+#include <stdlib.h>
+// ETCPACK calls srand(10000) and then rand() for every block it tries in T or H mode, so its output depends on the C library.
+// The game's textures were encoded on macOS: with Apple's rand() below, a clean original re-encodes to the game's blocks
+// 100% byte for byte (measured on hero 600090); with glibc's rand() it is 99.3%, all of the difference in T/H-mode decisions.
+// The state is per thread, which also makes the encoder safe to call from several threads (libc rand() was its only shared state).
+static __thread unsigned long etcpack_rand_state = 1;
+static void etcpack_srand(unsigned seed) { etcpack_rand_state = seed; }
+static int etcpack_rand(void)
+{
+	long hi, lo, x;
+	if (etcpack_rand_state == 0) etcpack_rand_state = 123459876;
+	hi = etcpack_rand_state / 127773; lo = etcpack_rand_state % 127773; x = 16807 * lo - 2836 * hi;      // 16807 * state mod (2^31 - 1)
+	if (x < 0) x += 0x7fffffff;
+	etcpack_rand_state = x;
+	return (int)(x % 0x80000000UL);
+}
+#ifndef ETCPACK_LIBC_RAND      // build with -DETCPACK_LIBC_RAND for the old behaviour (this machine's own rand())
+#define srand etcpack_srand
+#define rand etcpack_rand
+#undef RAND_MAX
+#define RAND_MAX 0x7fffffff
+#endif
 #define main etcpack_main
 #include "ETCPACK/source/etcpack.cxx"
 #undef main
