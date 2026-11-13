@@ -19,20 +19,22 @@ few blocks wide) lose their edge colour at compression time and no model can kno
 
 ## Before and after
 
-The face skin piece of three characters, cut from the texture atlas and shown at twice its size without smoothing. Left
-is the game's file as shipped, right is the same file after `clean.py` with the default settings.
+The characters as they are drawn in the game (Spine render of the idle pose, face area, about 1.5 times texture size).
+Left uses the game's files as shipped, right the same model with its textures run through `clean.py` at the default
+settings.
 
 **Scarlett**
 
-![Scarlett face skin, raw and cleaned](docs/compare_scarlett.png)
+![Scarlett rendered with raw and with cleaned textures](docs/compare_scarlett.png)
 
-**Nile**
+**Nile**: the cleaned side uses the censor-pack files as input (see "Use the censor pack when there is one" below);
+the raw side is the normally shipped file.
 
-![Nile face skin, raw and cleaned](docs/compare_nile.png)
+![Nile rendered with raw textures and with textures cleaned from the censor pack](docs/compare_nile.png)
 
 **Neville (skin)**
 
-![Neville skin face skin, raw and cleaned](docs/compare_neville_skin.png)
+![Neville skin rendered with raw and with cleaned textures](docs/compare_neville_skin.png)
 
 ## What is in here
 
@@ -42,7 +44,7 @@ is the game's file as shipped, right is the same file after `clean.py` with the 
 - `tools/fetch_textures.py`: download raw hero textures (and the better "censor pack" versions) from the game's update CDN.
 - `echoclean/`: the library the scripts use.
 
-Not in here: any game art beyond the three small comparison crops above, and the encoder itself (Ericsson ETCPACK; its licence does not allow redistribution, so a
+Not in here: any game art beyond the three small comparison pictures above, and the encoder itself (Ericsson ETCPACK; its licence does not allow redistribution, so a
 script downloads and builds it on your machine).
 
 ## Setup
@@ -223,4 +225,4 @@ are from one texture, so differences of a few hundredths of a dB are within what
 - **ETCPACK** is Ericsson's and stays under Ericsson's licence; `build_etcpack.sh` downloads it to your machine.
 
 This is a fan project and is not affiliated with the game's developer or publisher. No game assets are included apart from the three
-small comparison crops in this README, which belong to the game's publisher.
+small comparison pictures in this README, which belong to the game's publisher.
