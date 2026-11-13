@@ -11,7 +11,7 @@ models are trained on the real damage and not on an approximation of it.
 | Raw game texture | 36.38 dB | 36.05 dB | 0.880 | 0.9112 |
 | Stage 1, single pass | 42.50 dB | 42.92 dB | 0.551 | 0.9893 |
 | Stage 1, 8x self-ensemble | 42.84 dB | 43.27 dB | 0.533 | 0.9906 |
-| Full pipeline (default) | 42.97 dB | 43.45 dB | 0.512 | 0.9907 |
+| Full pipeline (default) | 43.05 dB | 43.55 dB | 0.505 | 0.9910 |
 
 Seam error is the render error when a piece is drawn over its own skin colour, counting only line-like error, in 8-bit
 levels; a clean original scores 0. Seams get much fainter. They do not all disappear: very small pieces (a mouth patch a
@@ -31,7 +31,7 @@ script downloads and builds it on your machine).
 ## Setup
 
 Linux with Python 3.10 or newer. On Windows use WSL. An NVIDIA or AMD GPU is strongly recommended: a 2048x2048 texture
-takes about 6 seconds on a mid-range GPU and minutes on a CPU.
+takes seconds on a mid-range GPU and many minutes on a CPU.
 
 ```bash
 git clone https://github.com/oedon81/Echocalypse-Texture-Cleaner
@@ -73,8 +73,9 @@ python clean.py path/to/knight_spine/600090 -o cleaned/600090 --copy-others
 
 | Option | Effect |
 |---|---|
-| `--no-ensemble` | One pass instead of eight: about 3x faster, about 0.35 dB lower |
-| `--no-refiner` | Skip stage 2: no encoder library needed, about 0.1 dB lower |
+| `--no-ensemble` | One pass instead of eight flips/rotations, in both stages: much faster, about 0.3 dB lower |
+| `--refiner-passes N` | How often stage 2 re-compresses and corrects (default 2). 1 is faster and about 0.04 dB lower; 3 is slower and about 0.02 dB higher |
+| `--no-refiner` | Skip stage 2: no encoder library needed, about 0.2 dB lower |
 | `--fp32` | Full precision on the GPU (the default half precision gives the same scores) |
 | `--cpu` | Run without a GPU |
 
@@ -112,8 +113,8 @@ If you have a clean original of a texture (a few old game builds shipped some un
 python evaluate.py --raw raw/600090/600090.png --clean originals/600090.png
 ```
 
-The first line reports how many of the game's blocks come out byte for byte when the clean file is re-encoded. About
-99% means the clean file really is what the game encoded. A low number means it is a different export of the same art,
+The first line reports how many of the game's blocks come out byte for byte when the clean file is re-encoded. 100%
+means the clean file really is what the game encoded. A low number means it is a different export of the same art,
 and the scores below it are then not meaningful.
 
 ## Training
@@ -152,21 +153,31 @@ Things learned the hard way:
   released stage 1 was finished at 5e-6.
 - **Memory.** Each data worker keeps a few clean images in memory; lower `--pool` or `--workers` if RAM is short.
 - **One training at a time** on a 16 GB machine.
+- **Rebuild the encoder library before training.** It used to take `rand()` from this machine and matched 99.3% of the
+  game's blocks; the released models were trained with that. It matches 100% now (see below), so models trained or
+  fine-tuned from here on see the exact damage.
 
 ## How it works
 
-1. **The encoder.** The game's textures are made with Ericsson ETCPACK 2.74 in `fast` + `perceptual` mode. Encoding a
-   clean original with it reproduces about 99% of the game's blocks byte for byte. A general-purpose ETC2 encoder gets
-   about 2% at soft edges, and its errors there go in the opposite direction.
+1. **The encoder.** The game's textures are made with Ericsson ETCPACK 2.74 in `fast` + `perceptual` mode, evidently on a
+   Mac. The Mac matters: for blocks in T or H mode ETCPACK starts its search from `rand()`, so the result depends on the C
+   library. With Apple's `rand()` (built into `native/etcpack_lib.cxx`), encoding a clean original reproduces the
+   game's blocks byte for byte: 100% on the test pair, against 99.3% with Linux's `rand()`. A general-purpose ETC2
+   encoder gets about 2% at soft edges, and its errors there go in the opposite direction.
 2. **Stage 1** is a residual CNN (9.6M parameters) on the decoded texture plus side information read from the compressed
    blocks: each texel's position inside its 4x4 block, the alpha range its code stands for, and the block's colour mode.
    Besides plain pixel error it is trained on the texture composited over its own colour, which is where seams show.
 3. **Self-ensemble.** The texture is cleaned in eight flips and rotations and the results are averaged.
 4. **Stage 2, the refiner** (2.4M parameters). A clean original always re-compresses to exactly the game's blocks. The
-   refiner is shown how the stage-1 output re-compresses and which blocks do not match, and corrects it.
+   refiner is shown how the stage-1 output re-compresses and which blocks do not match, and corrects it. It runs twice
+   (the second time on its own result, re-compressed again), each time in eight flips and rotations, and the two
+   results are averaged. Nothing is rounded to 8 bits until the very end.
 
 What did not help, in case you want to try: a much bigger model, a four times heavier seam loss, larger training
-patches, a second refiner pass, and blending in a second, worse copy of the same texture.
+patches, and blending in a second, worse copy of the same texture. Without retraining: clamping alpha to the range its
+code allows (the model already stays inside it), moving blocks until they re-compress to the game's data (worse), and
+scaling the corrections up or down. A second refiner pass only pays off now that nothing is rounded between the
+passes (with rounding it gave 0.01 dB); a third one adds very little.
 
 ## Credits
 

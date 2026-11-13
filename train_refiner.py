@@ -27,7 +27,7 @@ def main():
     ap.add_argument('--batch', type=int, default=12); ap.add_argument('--patch', type=int, default=96); ap.add_argument('--workers', type=int, default=4); ap.add_argument('--pool', type=int, default=6)
     ap.add_argument('--seam-weight', type=float, default=1.0); ap.add_argument('--val-raw'); ap.add_argument('--val-clean')
     a = ap.parse_args()
-    from echoclean import blocks as B, models, metrics as MT, data as D, pipeline as PL, encoder
+    from echoclean import blocks as B, models, metrics as MT, data as D, pipeline as PL
     enc_pool = get_context('spawn').Pool(4, maxtasksperchild=400)
     dev = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     out = os.path.join('runs', a.name); os.makedirs(out, exist_ok=True); log = open(os.path.join(out, 'log.txt'), 'a')
@@ -49,12 +49,10 @@ def main():
         nonlocal best
         models.save(ref, os.path.join(out, 'ckpt_last.pt'), step=step, kind='refiner')
         if val is None: return
-        ref.eval(); vb, vw, vh, vy = val; x = B.decode(vb); o1 = PL.finish(PL.stage1(net1, vb, dev, tta=False, half=False))
-        inp = PL.refiner_input(x, o1, vb, encoder.encode_blocks_mp(o1, enc_pool))
-        t = torch.nn.functional.pad(torch.from_numpy(inp).to(dev).permute(2, 0, 1)[None], (PL.PAD,) * 4)
-        o = PL.finish(PL._tiles(ref, t, x.shape[0], x.shape[1], 1024, False).clamp_(0, 1).mul_(255).permute(1, 2, 0).cpu().numpy()); ref.train()
+        ref.eval(); vb, vw, vh, vy = val; o1 = PL.stage1(net1, vb, dev, tta=False, half=False)       # one pass of each, no ensembles: quick, and what training sees
+        o = PL.finish(PL.stage2(ref, vb, o1, enc_pool, dev, passes=1, tta=False, half=False)); ref.train()
         r = MT.score(o[:vh, :vw], vy, dev)
-        if step == 0: say(f'--- stage 1 alone:  {MT.fmt(MT.score(o1[:vh, :vw], vy, dev))}')
+        if step == 0: say(f'--- stage 1 alone:  {MT.fmt(MT.score(PL.finish(o1)[:vh, :vw], vy, dev))}')
         say(f'--- step {step}: validation pair  {MT.fmt(r)}')
         if r['psnr'] > best: best = r['psnr']; models.save(ref, os.path.join(out, 'ckpt_best.pt'), step=step, kind='refiner')
     evaluate(0); t0 = time.time()

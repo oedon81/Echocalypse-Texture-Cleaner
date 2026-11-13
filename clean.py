@@ -18,7 +18,8 @@ def main():
     ap.add_argument('--stage1', default=None, help='stage-1 model (default: models/echoclean_stage1.pt)')
     ap.add_argument('--refiner', default=None, help='refiner model (default: models/echoclean_refiner.pt)')
     ap.add_argument('--no-refiner', action='store_true', help='skip stage 2 (no encoder library needed; slightly lower quality)')
-    ap.add_argument('--no-ensemble', action='store_true', help='one pass instead of 8 flips/rotations: about 3x faster, about 0.35 dB lower')
+    ap.add_argument('--no-ensemble', action='store_true', help='one pass instead of 8 flips/rotations in both stages: much faster, about 0.3 dB lower')
+    ap.add_argument('--refiner-passes', type=int, default=2, help='how often stage 2 re-compresses and corrects (default 2; 1 is faster and slightly lower)')
     ap.add_argument('--fp32', action='store_true', help='full precision on the GPU (default: half precision, same scores)')
     ap.add_argument('--cpu', action='store_true'); ap.add_argument('--copy-others', action='store_true', help='also copy non-texture files (atlas, skel, ...) to the output')
     ap.add_argument('--overwrite', action='store_true')
@@ -43,7 +44,7 @@ def main():
                 skipped += 1
                 if a.copy_others: os.makedirs(os.path.dirname(dst) or '.', exist_ok=True); shutil.copy2(src, dst)
                 continue
-            out = P(blocks, w, h, tta=not a.no_ensemble, half=not a.fp32)
+            out = P(blocks, w, h, tta=not a.no_ensemble, half=not a.fp32, passes=max(1, a.refiner_passes))
             os.makedirs(os.path.dirname(dst) or '.', exist_ok=True)
             Image.fromarray(out, 'RGBA').save(dst + '.tmp.png', compress_level=3); os.replace(dst + '.tmp.png', dst); n += 1
             print(f'[{n}] {rel}  {w}x{h}  ({(time.time() - t0) / n:.1f}s per texture)', flush=True)
